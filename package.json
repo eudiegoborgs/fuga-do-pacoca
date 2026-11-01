@@ -1,0 +1,10 @@
+{
+  "name": "a-fuga-do-pacoca",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node -e \"import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path'; const root = process.cwd(); const recordsFile = path.join(root, 'records.json'); const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.json': 'application/json; charset=utf-8' }; const readRecords = () => { try { return JSON.parse(fs.readFileSync(recordsFile, 'utf8')); } catch { return []; } }; http.createServer((req, res) => { const urlPath = req.url === '/' ? '/index.html' : req.url.split('?')[0]; if (urlPath === '/api/records') { if (req.method === 'GET') { res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' }); return res.end(JSON.stringify(readRecords())); } if (req.method === 'POST') { let body = ''; req.on('data', (c) => (body += c)); req.on('end', () => { try { const entry = JSON.parse(body); const list = [...readRecords(), entry].filter((r) => Number.isFinite(Number(r?.time))).sort((a, b) => a.time - b.time).slice(0, 10); fs.writeFileSync(recordsFile, JSON.stringify(list, null, 2)); res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(list)); } catch { res.writeHead(400); res.end('[]'); } }); return; } } const filePath = path.join(root, urlPath); if (!filePath.startsWith(root) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) { res.writeHead(404); return res.end('Not found'); } res.writeHead(200, { 'Content-Type': mime[path.extname(filePath)] || 'application/octet-stream' }); fs.createReadStream(filePath).pipe(res); }).listen(8080, '127.0.0.1', () => console.log('Servidor rodando em http://localhost:8080'));\"",
+    "test": "node --test tests/*.test.js"
+  }
+}

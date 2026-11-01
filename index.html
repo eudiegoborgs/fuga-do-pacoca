@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Fuga do Paçoca — Fase 1</title>
+  <link rel="stylesheet" href="src/style.css" />
+</head>
+<body>
+  <header class="top-bar">
+    <div class="brand">
+      <canvas class="avatar-canvas" width="46" height="46" data-avatar="pacoca"></canvas>
+      <div>
+        <h1>🐾 A Fuga do Paçoca — Fase 1</h1>
+        <p>Guie o Yorkshire de 5 kg do Quarto até o Portão da Garagem!</p>
+      </div>
+    </div>
+    <div class="hud-stats">
+      <button class="btn" id="pee-btn" type="button">🐕💦 Fazer Xixi (E)</button>
+      <button class="btn btn-secondary" id="fullscreen-btn" type="button">⛶ Tela Cheia (F)</button>
+      <button class="btn btn-secondary" id="mute-btn" type="button">🔊 Som</button>
+      <button class="btn" id="top-restart-btn" type="button">🔄 Reiniciar</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="canvas-wrap" id="game-screen-box">
+      <canvas id="game-canvas" width="640" height="640"></canvas>
+      <div class="under-screen-hud">
+        <div class="stat-pill" id="hud-hearts">Pelo Seco: ❤️❤️❤️</div>
+        <div class="pee-meter-pill">
+          <span id="hud-pee">💦 Xixi (E): Cheia!</span>
+          <div class="pee-progress-track">
+            <div class="pee-progress-fill" id="hud-pee-bar" style="width: 100%;"></div>
+          </div>
+        </div>
+        <div class="stat-pill" id="hud-timer">⏱️ 0.00s | 🏆 --</div>
+        <div class="stat-pill" id="hud-alert">🏠 Casa Calma</div>
+      </div>
+
+      <!-- Modal Inicial (dentro do contêiner do jogo para aparecer também em Tela Cheia) -->
+      <div class="overlay-modal" id="intro-modal">
+        <div class="modal-card">
+          <canvas class="modal-hero avatar-canvas" width="90" height="90" data-avatar="pacoca"></canvas>
+          <h2>🐾 A Fuga do Paçoca</h2>
+          <p style="margin-top: 6px; color: #cbd5e1; font-size: 0.9rem;">
+            O portão abriu! Guie o Paçoca (5 kg de pelo e velocidade) até a rua desviando das <strong>4 câmeras</strong> e dos <strong>5 humanos</strong> (ou faça <strong>xixi escondido com E</strong> para distraí-los limpando!):
+          </p>
+
+          <div class="modal-grid">
+            <div class="human-card">
+              <canvas class="avatar-canvas" width="44" height="44" data-avatar="emily"></canvas>
+              <div class="human-info">
+                <h3>Emily 🩰🛼</h3>
+                <div class="role">Faz piruetas de balé/patins. Reação mais lenta (1.3s), mas GRITA avisando a casa!</div>
+              </div>
+            </div>
+            <div class="human-card">
+              <canvas class="avatar-canvas" width="44" height="44" data-avatar="diego"></canvas>
+              <div class="human-info">
+                <h3>Diego 📞💪</h3>
+                <div class="role">Pai forte, corre igual ao Paçoca. Aproveite quando o trabalho chamar!</div>
+              </div>
+            </div>
+            <div class="human-card">
+              <canvas class="avatar-canvas" width="44" height="44" data-avatar="stefanny"></canvas>
+              <div class="human-info">
+                <h3>Stéfanny 💦👑</h3>
+                <div class="role">Chefe na Garagem! Mais rápida e joga água, mas se distrai com TDAH/crianças!</div>
+              </div>
+            </div>
+            <div class="human-card">
+              <canvas class="avatar-canvas" width="44" height="44" data-avatar="bryan"></canvas>
+              <div class="human-info">
+                <h3>Bryan 🎵🏃</h3>
+                <div class="role">Anda pela casa e quintal cantarolando (notas visíveis!) e chama a mãe.</div>
+              </div>
+            </div>
+            <div class="human-card">
+              <canvas class="avatar-canvas" width="44" height="44" data-avatar="arthur"></canvas>
+              <div class="human-info">
+                <h3>Arthur 🛹✨</h3>
+                <div class="role">Muito ágil de skate no Quintal, mas perde o foco super fácil!</div>
+              </div>
+            </div>
+            <div class="human-card">
+              <canvas class="avatar-canvas" width="44" height="44" data-avatar="spike"></canvas>
+              <div class="human-info">
+                <h3>Spike 🥭💢</h3>
+                <div class="role">Fiapo de manga parado com raio circular (Área de Domínio)! Se entrar no raio, brigam (trava 0.5s, dá dano e alerta o cômodo)!</div>
+              </div>
+            </div>
+            <div class="human-card">
+              <canvas class="avatar-canvas" width="44" height="44" data-avatar="meggie"></canvas>
+              <div class="human-info">
+                <h3>Meggie 🐾📢</h3>
+                <div class="role">Yorkshire pequenininha de orelha em pé! Se move pela casa com metade da visão dos humanos e late alto se vir o Paçoca!</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn" id="start-btn" type="button" style="font-size: 1.05rem; padding: 12px 28px;">
+            🚀 Começar a Fuga!
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal de Vitória / Fim de Tentativa (dentro do jogo para aparecer em Tela Cheia) -->
+      <div class="overlay-modal hidden" id="end-modal">
+        <div class="modal-card">
+          <canvas class="modal-hero avatar-canvas" id="end-avatar" width="90" height="90"></canvas>
+          <h2 id="end-title">Resultado</h2>
+          <p id="end-desc" style="margin: 12px 0 10px; color: #cbd5e1; font-size: 0.95rem;"></p>
+          <div id="end-records" style="margin: 0 0 16px; font-size: 0.88rem; color: #fde047;"></div>
+          <button class="btn" id="restart-btn" type="button" style="font-size: 1rem; padding: 10px 24px;">
+            🔄 Jogar Novamente (Espaço)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side-panel">
+      <h2>🏆 Recordes de Fuga (Localhost)</h2>
+      <div class="controls-box" id="records-list" style="margin-bottom: 12px;">Sem recordes ainda. Fuja pelo Portão!</div>
+
+      <h2>👨‍👩‍👧‍👦 Humanos e Cães da Casa (2D)</h2>
+      <div id="humans-list"></div>
+
+      <h2>🎮 Como Jogar</h2>
+      <div class="controls-box">
+        <p><strong>Mover Paçoca:</strong> Setas ou <code>W A S D</code>.</p>
+        <p><strong>Fazer Xixi (Recarga 5s):</strong> Tecla <code>E</code> ou botão <strong>Fazer Xixi</strong>. Só funciona <strong>fora do campo de visão</strong> dos humanos — quando um humano vê o xixi, fica distraído limpando!</p>
+        <p><strong>Minimapa & Tela Cheia:</strong> Veja a planta baixa da casa no canto inferior direito e use <code>F</code> para Tela Cheia.</p>
+      </div>
+
+      <div class="touch-controls" aria-label="Controles de toque">
+        <div></div>
+        <button class="touch-btn" data-dir="up" type="button">▲</button>
+        <button class="touch-btn" id="touch-pee-btn" type="button">💦</button>
+        <button class="touch-btn" data-dir="left" type="button">◀</button>
+        <button class="touch-btn" data-dir="down" type="button">▼</button>
+        <button class="touch-btn" data-dir="right" type="button">▶</button>
+      </div>
+    </aside>
+  </main>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
