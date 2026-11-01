@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createInitialState, stepGame } from '../src/entities.js';
 import { GameRenderer } from '../src/renderer.js';
 
-const ROOT = '/Users/diegoferreira/Projects/fuga-do-pacoca';
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 test('GameRenderer draws detailed 2D furniture for all rooms and 2D character sprites for Paçoca and all 5 humans', () => {
   const calls = [];
