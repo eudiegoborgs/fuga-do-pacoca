@@ -46,14 +46,33 @@ Jogo 2D top-down de furtividade e ação em HTML5 Canvas e JavaScript puro (ES M
 Pré-requisito: **Node.js 20+**.
 
 ```bash
-# Executar a suíte de testes automatizados (23 testes)
+# Validar fronteiras arquiteturais (dependency-cruiser) + suíte de 24 testes
 npm test
+
+# Executar apenas a validação de regras de arquitetura SOLID/DDD
+npm run arch:check
 
 # Iniciar o servidor local em http://localhost:8080
 npm start
 ```
 
 Depois, acesse `http://localhost:8080` no navegador.
+
+---
+
+## 🏛️ Arquitetura (DDD + SOLID) e Documentação Técnica
+
+O código está segregado em 4 camadas coesas com **Linguagem Ubíqua** e baixo acoplamento, validadas automaticamente pelo [`dependency-cruiser`](.dependency-cruiser.cjs):
+
+- **`src/domain/`** — Camada pura de Domínio: Linguagem Ubíqua (`ubiquitous-language.js`), Geometria e Visão (`geometry/`), Catálogo e Gerador das 30 Plantas (`house/`), Fábrica da Família (`family/`) e Regras de Negócio (`rules/`).
+- **`src/application/`** — Casos de Uso e Portas (`ports/` e `use-cases/`).
+- **`src/infrastructure/`** — Adaptadores externos de Áudio (`web-audio-sound-engine.js`) e Persistência em Localhost (`localhost-record-repository.js`).
+- **`src/presentation/`** — Renderizador Canvas 2D (`canvas/game-renderer.js`) e Controlador DOM (`ui/game-controller.js`).
+
+### Especificações (Specs) e ADRs
+- [Especificação do Domínio e Linguagem Ubíqua](docs/specs/domain-ubiquitous-language-spec.md) *(Público-alvo: Desenvolvedores de domínio, Game Designers e QA)*
+- [ADR 0001: Arquitetura em Camadas com DDD, SOLID e Dependency Cruiser](docs/adr/0001-layered-ddd-and-solid-architecture.md) *(Público-alvo: Engenheiros de Software e Arquitetos)*
+- [ADR 0002: Catálogo Determinístico de 30 Plantas Baixas](docs/adr/0002-deterministic-30-floorplan-catalog.md) *(Público-alvo: Desenvolvedores de Gameplay e Testes)*
 
 ---
 
