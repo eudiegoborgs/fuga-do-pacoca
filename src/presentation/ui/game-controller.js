@@ -1,28 +1,26 @@
 /**
  * Controlador de Apresentação (DOM, HUD, Modais, Tela Cheia e Loop de Entrada).
- * Público-alvo: Desenvolvedores de UI/Frontend que alteram elementos HTML/CSS ou atalhos de teclado.
+ * Público-alvo: Desenvolvedores de UI/Frontend que alteram elementos HTML/CSS,
+ * controles de smartphone / gamepad virtual ou atalhos de teclado.
  */
-import { EstadoDaPartida } from '../../domain/ubiquitous-language.js';
-import { formatEscapeTime } from '../../application/ports/record-repository-port.js';
-import { loadEscapeRecords } from '../../application/use-cases/escape-records-use-case.js';
-import {
-  createInitialState,
-  stepGame,
-} from '../../application/use-cases/escape-simulation-use-case.js';
-import { syncRecordsWithLocalhostServer } from '../../infrastructure/storage/localhost-record-repository.js';
-import { SoundEngine } from '../../infrastructure/audio/web-audio-sound-engine.js';
-import { GameRenderer } from '../canvas/game-renderer.js';
+import { createGameContainer } from '../../container/ioc-container.js';
+import { EstadoDaPartida } from '../../domain/partida-states.js';
 
-export function bootstrapGamePresentation() {
+export function bootstrapGamePresentation(container = createGameContainer()) {
   const canvas = document.getElementById('game-canvas');
-  const renderer = new GameRenderer(canvas);
-  const sound = new SoundEngine();
+  const rendererFactory = container.resolve('rendererFactory');
+  const renderer = rendererFactory(canvas);
+  const sound = container.resolve('soundEngine');
+  const recordRepository = container.resolve('recordRepository');
+  const simulation = container.resolve('simulationUseCase');
+  const config = container.resolve('config');
 
-  let state = createInitialState();
+  let state = simulation.createInitialState();
   let isPaused = true;
   let isPeeRequested = false;
   const pressedKeys = new Set();
   const touchInputVector = { dx: 0, dy: 0 };
+  const activeTouchDirections = new Set();
 
   const heartsElement = document.getElementById('hud-hearts');
   const peeLabelElement = document.getElementById('hud-pee');
@@ -48,16 +46,17 @@ export function bootstrapGamePresentation() {
   }
 
   function renderRecordsLeaderboard() {
-    const records = loadEscapeRecords();
+    const records = recordRepository.load();
     if (recordsListElement) {
       if (records.length === 0) {
         recordsListElement.textContent = 'Sem recordes ainda. Fuja pelo Portão!';
       } else {
+        const displayLimit = config.environment.leaderboardDisplayLimit || 5;
         recordsListElement.innerHTML = records
-          .slice(0, 5)
+          .slice(0, displayLimit)
           .map(
             (record, index) =>
-              `<div><strong>#${index + 1}</strong> — ⏱️ <strong>${formatEscapeTime(record.time)}</strong> <span style="opacity:0.75">(${record.layoutId || 'planta'})</span></div>`
+              `<div><strong>#${index + 1}</strong> — ⏱️ <strong>${recordRepository.formatEscapeTime(record.time)}</strong> <span style="opacity:0.75">(${record.layoutId || 'planta'})</span></div>`
           )
           .join('');
       }
@@ -90,7 +89,7 @@ export function bootstrapGamePresentation() {
     const emptyHearts = '🖤'.repeat(state.pacoca.maxHearts - state.pacoca.hearts);
     heartsElement.textContent = `Pelo Seco: ${fullHearts}${emptyHearts}`;
 
-    const maxCooldown = state.pacoca.peeMaxCooldown || 5.0;
+    const maxCooldown = state.pacoca.peeMaxCooldown || config.gameplay.peeCooldownSeconds;
     const peePercentage = Math.max(
       0,
       Math.min(100, (1 - state.pacoca.peeCooldown / maxCooldown) * 100)
@@ -112,9 +111,9 @@ export function bootstrapGamePresentation() {
     }
 
     if (timerElement) {
-      const records = loadEscapeRecords();
-      const bestTimeLabel = records.length > 0 ? formatEscapeTime(records[0].time) : '--';
-      timerElement.textContent = `⏱️ ${formatEscapeTime(state.time)} | 🏆 ${bestTimeLabel}`;
+      const records = recordRepository.load();
+      const bestTimeLabel = records.length > 0 ? recordRepository.formatEscapeTime(records[0].time) : '--';
+      timerElement.textContent = `⏱️ ${recordRepository.formatEscapeTime(state.time)} | 🏆 ${bestTimeLabel}`;
     }
 
     if (state.houseAlertTimer > 0) {
@@ -145,7 +144,7 @@ export function bootstrapGamePresentation() {
   function showEndOfMatchModal() {
     endModalElement.classList.remove('hidden');
     const records = renderRecordsLeaderboard();
-    const bestTimeLabel = records.length > 0 ? formatEscapeTime(records[0].time) : '--';
+    const bestTimeLabel = records.length > 0 ? recordRepository.formatEscapeTime(records[0].time) : '--';
 
     if (state.status === EstadoDaPartida.FUGA_CONCLUIDA) {
       renderer.renderAvatarCanvas(endAvatarCanvas, 'pacoca');
@@ -153,9 +152,9 @@ export function bootstrapGamePresentation() {
       endTitleElement.textContent = isNewRecord
         ? '🏆 NOVO RECORDE! O PAÇOCA GANHOU A RUA!'
         : '🎉 FUGA COMPLETA! O PAÇOCA GANHOU A RUA!';
-      endDescriptionElement.textContent = `Tempo até a fuga: ${formatEscapeTime(state.escapeTime || state.time)}! O Paçoca driblou as 4 câmeras e todos os 5 humanos até passar pelo Portão!`;
+      endDescriptionElement.textContent = `Tempo até a fuga: ${recordRepository.formatEscapeTime(state.escapeTime || state.time)}! O Paçoca driblou as câmeras e todos os humanos até passar pelo Portão!`;
       if (endRecordsElement) {
-        endRecordsElement.textContent = `⏱️ Tempo da Fuga: ${formatEscapeTime(state.escapeTime || state.time)} | 🏆 Melhor Recorde (Localhost): ${bestTimeLabel}`;
+        endRecordsElement.textContent = `⏱️ Tempo da Fuga: ${recordRepository.formatEscapeTime(state.escapeTime || state.time)} | 🏆 Melhor Recorde (Localhost): ${bestTimeLabel}`;
       }
     } else if (state.status === EstadoDaPartida.ENCHARCADO_DE_BANHO) {
       renderer.renderAvatarCanvas(endAvatarCanvas, 'stefanny');
@@ -176,7 +175,7 @@ export function bootstrapGamePresentation() {
   }
 
   function startOrResetMatch() {
-    state = createInitialState();
+    state = simulation.createInitialState();
     renderer.resetFog();
     isPaused = false;
     isPeeRequested = false;
@@ -232,65 +231,154 @@ export function bootstrapGamePresentation() {
     pressedKeys.delete(event.key.toLowerCase());
   });
 
+  function recalculateTouchDirectionVector() {
+    let dx = 0;
+    let dy = 0;
+    if (activeTouchDirections.has('left')) dx -= 1;
+    if (activeTouchDirections.has('right')) dx += 1;
+    if (activeTouchDirections.has('up')) dy -= 1;
+    if (activeTouchDirections.has('down')) dy += 1;
+    touchInputVector.dx = dx;
+    touchInputVector.dy = dy;
+  }
+
   function readPlayerInputCommand() {
     let dx = touchInputVector.dx;
     let dy = touchInputVector.dy;
     if (pressedKeys.has('arrowleft') || pressedKeys.has('a')) dx -= 1;
     if (pressedKeys.has('arrowright') || pressedKeys.has('d')) dx += 1;
     if (pressedKeys.has('arrowup') || pressedKeys.has('w')) dy -= 1;
-    if (pressedKeys.has('arrowdown') || pressedKeys.has('s')) dy += 1;
+    if (pressedKeys.has('arrowdown') || pressedKeys.has('s')) dy -= 1;
     const pee = isPeeRequested;
     isPeeRequested = false;
     return { dx, dy, pee };
   }
 
+  // Controles virtuais na tela (Gamepad D-pad)
   for (const dirButton of document.querySelectorAll('[data-dir]')) {
     const direction = dirButton.getAttribute('data-dir');
-    const setDirectionActive = (active) => {
-      if (!active) {
-        touchInputVector.dx = 0;
-        touchInputVector.dy = 0;
-        return;
-      }
-      touchInputVector.dx = direction === 'left' ? -1 : direction === 'right' ? 1 : 0;
-      touchInputVector.dy = direction === 'up' ? -1 : direction === 'down' ? 1 : 0;
+    const startDirection = (e) => {
+      e.preventDefault();
+      sound.init();
+      activeTouchDirections.add(direction);
+      dirButton.classList.add('active');
+      recalculateTouchDirectionVector();
     };
-    dirButton.addEventListener('pointerdown', () => setDirectionActive(true));
-    dirButton.addEventListener('pointerup', () => setDirectionActive(false));
-    dirButton.addEventListener('pointerleave', () => setDirectionActive(false));
+    const endDirection = (e) => {
+      e.preventDefault();
+      activeTouchDirections.delete(direction);
+      dirButton.classList.remove('active');
+      recalculateTouchDirectionVector();
+    };
+
+    dirButton.addEventListener('pointerdown', startDirection);
+    dirButton.addEventListener('pointerup', endDirection);
+    dirButton.addEventListener('pointercancel', endDirection);
+    dirButton.addEventListener('pointerleave', endDirection);
   }
 
-  document.getElementById('pee-btn').addEventListener('click', () => {
+  // Toque / Arrastar diretamente no Canvas (Virtual Thumbstick para Smartphones)
+  let touchOrigin = null;
+  canvas.addEventListener(
+    'touchstart',
+    (e) => {
+      sound.init();
+      if (e.touches && e.touches.length > 0) {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        touchOrigin = {
+          x: touch.clientX - rect.left,
+          y: touch.clientY - rect.top,
+        };
+      }
+    },
+    { passive: false }
+  );
+
+  canvas.addEventListener(
+    'touchmove',
+    (e) => {
+      if (!touchOrigin || !e.touches || e.touches.length === 0) return;
+      e.preventDefault(); // Impede scroll indesejado enquanto joga no celular
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const currentX = touch.clientX - rect.left;
+      const currentY = touch.clientY - rect.top;
+      const deltaX = currentX - touchOrigin.x;
+      const deltaY = currentY - touchOrigin.y;
+      const distance = Math.hypot(deltaX, deltaY);
+      const deadzone = 12;
+
+      if (distance > deadzone) {
+        touchInputVector.dx = Math.max(-1, Math.min(1, deltaX / Math.max(distance, 35)));
+        touchInputVector.dy = Math.max(-1, Math.min(1, deltaY / Math.max(distance, 35)));
+      } else {
+        recalculateTouchDirectionVector();
+      }
+    },
+    { passive: false }
+  );
+
+  const resetCanvasTouch = () => {
+    touchOrigin = null;
+    recalculateTouchDirectionVector();
+  };
+  canvas.addEventListener('touchend', resetCanvasTouch);
+  canvas.addEventListener('touchcancel', resetCanvasTouch);
+
+  // Ações de Xixi (Botão superior e Botão do Gamepad Virtual)
+  const triggerPeeAction = (e) => {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
     sound.init();
     isPeeRequested = true;
-  });
+  };
 
-  document.getElementById('touch-pee-btn').addEventListener('click', () => {
-    sound.init();
-    isPeeRequested = true;
-  });
+  const peeButtonTop = document.getElementById('pee-btn');
+  if (peeButtonTop) peeButtonTop.addEventListener('click', triggerPeeAction);
 
-  document.getElementById('start-btn').addEventListener('click', () => {
-    sound.init();
-    startOrResetMatch();
-  });
+  const screenPeeButton = document.getElementById('touch-screen-pee-btn');
+  if (screenPeeButton) {
+    screenPeeButton.addEventListener('pointerdown', triggerPeeAction);
+  }
 
-  document.getElementById('restart-btn').addEventListener('click', () => {
-    sound.init();
-    startOrResetMatch();
-  });
+  const legacyTouchPee = document.getElementById('touch-pee-btn');
+  if (legacyTouchPee) {
+    legacyTouchPee.addEventListener('pointerdown', triggerPeeAction);
+  }
 
-  document.getElementById('top-restart-btn').addEventListener('click', () => {
-    sound.init();
-    startOrResetMatch();
-  });
+  // Inicialização e Reinício
+  const startButton = document.getElementById('start-btn');
+  if (startButton) {
+    startButton.addEventListener('click', () => {
+      sound.init();
+      startOrResetMatch();
+    });
+  }
 
-  muteButton.addEventListener('click', () => {
-    const isMuted = sound.toggleMute();
-    muteButton.textContent = isMuted ? '🔇 Som' : '🔊 Som';
-  });
+  const restartButton = document.getElementById('restart-btn');
+  if (restartButton) {
+    restartButton.addEventListener('click', () => {
+      sound.init();
+      startOrResetMatch();
+    });
+  }
 
-  syncRecordsWithLocalhostServer(() => renderRecordsLeaderboard());
+  const topRestartButton = document.getElementById('top-restart-btn');
+  if (topRestartButton) {
+    topRestartButton.addEventListener('click', () => {
+      sound.init();
+      startOrResetMatch();
+    });
+  }
+
+  if (muteButton) {
+    muteButton.addEventListener('click', () => {
+      const isMuted = sound.toggleMute();
+      muteButton.textContent = isMuted ? '🔇 Som' : '🔊 Som';
+    });
+  }
+
+  recordRepository.syncWithServer(() => renderRecordsLeaderboard());
   buildCharacterRosterCards();
   renderRecordsLeaderboard();
   updateHeadsUpDisplay();
@@ -298,12 +386,13 @@ export function bootstrapGamePresentation() {
 
   let previousTimestamp = performance.now();
   function runFrameLoop(currentTimestamp) {
-    const dt = Math.min(0.05, (currentTimestamp - previousTimestamp) / 1000);
+    const maxDelta = config.movement.maxFrameDeltaSeconds || 0.05;
+    const dt = Math.min(maxDelta, (currentTimestamp - previousTimestamp) / 1000);
     previousTimestamp = currentTimestamp;
 
     if (!isPaused && state.status === EstadoDaPartida.EM_ANDAMENTO) {
       const playerInput = readPlayerInputCommand();
-      stepGame(state, playerInput, dt);
+      simulation.stepGame(state, playerInput, dt);
       for (const soundEvent of state.soundEvents) {
         sound.playEvent(soundEvent);
       }

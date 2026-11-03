@@ -2,7 +2,7 @@
  * Adaptador de Infraestrutura de Áudio (Web Audio API).
  * Traduz Eventos Sonoros do Domínio (`EventoSonoro`) em síntese de áudio no navegador.
  */
-import { EventoSonoro } from '../../domain/ubiquitous-language.js';
+import { EventoSonoro } from '../../domain/partida-states.js';
 
 export class SoundEngine {
   constructor() {

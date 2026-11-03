@@ -2,12 +2,12 @@
  * Estratégias Comportamentais dos 5 Humanos da Família (Single Responsibility + Open/Closed Principle).
  * Cada personagem possui sua própria função coesa de atualização de estado, evitando condicionais monolíticas.
  */
+import { BASE_SPEED } from '../../config/game-config.js';
 import {
-  BASE_SPEED,
   EstadoDaPartida,
   ModoDoHumano,
   EventoSonoro,
-} from '../ubiquitous-language.js';
+} from '../partida-states.js';
 import {
   hasLineOfSight,
   isPointInCone,

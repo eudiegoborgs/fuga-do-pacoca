@@ -201,6 +201,7 @@ canvas {
   border-radius: 10px;
   background: #090d16;
   display: block;
+  touch-action: none;
 }
 
 .side-panel {
@@ -263,23 +264,114 @@ canvas {
   border-radius: 10px;
 }
 
-.touch-controls {
-  display: none;
-  grid-template-columns: repeat(3, 56px);
-  grid-template-rows: repeat(2, 50px);
-  gap: 6px;
-  justify-content: center;
-  margin-top: 8px;
+.touch-gamepad {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 640px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 10px 14px;
+  gap: 12px;
+  touch-action: none;
+  user-select: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-.touch-btn {
-  background: rgba(51, 65, 85, 0.9);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
+.dpad-box {
+  display: grid;
+  grid-template-columns: repeat(3, 52px);
+  grid-template-rows: repeat(3, 48px);
+  gap: 4px;
+  align-items: center;
+  justify-items: center;
+}
+
+.dpad-up { grid-column: 2; grid-row: 1; }
+.dpad-left { grid-column: 1; grid-row: 2; }
+.dpad-center {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.2rem;
-  font-weight: bold;
-  touch-action: manipulation;
+  opacity: 0.6;
+}
+.dpad-right { grid-column: 3; grid-row: 2; }
+.dpad-down { grid-column: 2; grid-row: 3; }
+
+.dpad-btn {
+  width: 52px;
+  height: 48px;
+  background: #334155;
+  color: #fbbf24;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  font-size: 1.35rem;
+  font-weight: 900;
+  cursor: pointer;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.08s ease, background 0.08s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dpad-btn:active,
+.dpad-btn.active {
+  background: #f59e0b;
+  color: #0f172a;
+  transform: scale(0.92);
+  border-color: #fde047;
+}
+
+.touch-actions-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 260px;
+}
+
+.touch-action-btn.action-pee {
+  width: 100%;
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff;
+  border: 2px solid #38bdf8;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: none;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+  transition: transform 0.08s ease, background 0.08s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-action-btn.action-pee:active {
+  transform: scale(0.94);
+  background: #38bdf8;
+  color: #0f172a;
+}
+
+.touch-hint {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-align: center;
+  line-height: 1.25;
+}
+
+@media (min-width: 861px) and (pointer: fine) {
+  /* No desktop com mouse/teclado, os controles de toque ficam recolhidos para economizar espaço */
+  .touch-gamepad {
+    display: none;
+  }
 }
 
 .overlay-modal {
@@ -330,8 +422,5 @@ canvas {
 @media (max-width: 860px) {
   .layout {
     grid-template-columns: 1fr;
-  }
-  .touch-controls {
-    display: grid;
   }
 }

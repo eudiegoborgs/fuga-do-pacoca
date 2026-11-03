@@ -8,9 +8,11 @@ import {
   MEGGIE_VISION_RANGE,
   SPIKE_DOMAIN_RADIUS,
   PEE_COOLDOWN_SECONDS,
+} from '../../config/game-config.js';
+import {
   ModoDoHumano,
   ModoDoCao,
-} from '../ubiquitous-language.js';
+} from '../partida-states.js';
 
 export function rotateCircuit(circuitWaypoints, startIndex) {
   return [

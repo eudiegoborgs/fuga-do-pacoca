@@ -3,7 +3,8 @@
  * Regra de Negócio Invariante: O tempo só vira recorde quando o Paçoca realmente foge pelo Portão
  * (`status === EstadoDaPartida.FUGA_CONCLUIDA`). Capturas ou banhos nunca geram recorde.
  */
-import { EstadoDaPartida } from '../../domain/ubiquitous-language.js';
+import { GAME_CONFIG } from '../../config/game-config.js';
+import { EstadoDaPartida } from '../../domain/partida-states.js';
 import { RECORDS_STORAGE_KEY } from '../ports/record-repository-port.js';
 
 let memoryRecordsFallback = [];
@@ -56,7 +57,7 @@ export function recordEscapeWin(
 
   const rankedRecords = [...existingRecords, newRecordEntry]
     .sort((first, second) => first.time - second.time)
-    .slice(0, 10);
+    .slice(0, GAME_CONFIG.environment.maxSavedRecords);
 
   memoryRecordsFallback = rankedRecords;
   try {
@@ -71,7 +72,7 @@ export function recordEscapeWin(
     onPersistRemote(newRecordEntry);
   } else if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
     window
-      .fetch('/api/records', {
+      .fetch(GAME_CONFIG.environment.recordsApiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newRecordEntry),

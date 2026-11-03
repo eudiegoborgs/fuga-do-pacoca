@@ -1,14 +1,6 @@
 /**
- * Linguagem Ubíqua (Ubiquitous Language) do Domínio "A Fuga do Paçoca".
- * Centraliza os termos, estados, modos e constantes invariantes do negócio,
- * livres de acoplamento com infraestrutura (DOM, Canvas, WebAudio ou HTTP).
+ * Estados e Modos das Entidades da Partida (Value Objects / Enumerações do Domínio).
  */
-
-export const BASE_SPEED = 210;
-export const HUMAN_VISION_RANGE = 190;
-export const MEGGIE_VISION_RANGE = HUMAN_VISION_RANGE / 2;
-export const SPIKE_DOMAIN_RADIUS = MEGGIE_VISION_RANGE;
-export const PEE_COOLDOWN_SECONDS = 5.0;
 
 export const EstadoDaPartida = Object.freeze({
   EM_ANDAMENTO: 'playing',

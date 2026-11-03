@@ -4,7 +4,8 @@
  * (ex.: LocalStorage, IndexedDB, API REST em localhost) respeitando a Inversão de Dependência (DIP).
  */
 
-export const RECORDS_STORAGE_KEY = 'fuga_do_pacoca_records';
+import { RECORDS_STORAGE_KEY } from '../../config/game-config.js';
+export { RECORDS_STORAGE_KEY };
 
 export function formatEscapeTime(seconds) {
   const numericSeconds = Number(seconds);

@@ -10,7 +10,9 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 test('SOLID & DDD Architecture: folder segregation, ubiquitous language, specs/ADRs, and zero dependency-cruiser violations', async () => {
   const requiredFiles = [
-    'src/domain/ubiquitous-language.js',
+    'src/config/game-config.js',
+    'src/domain/partida-states.js',
+    'src/container/ioc-container.js',
     'src/domain/geometry/spatial-vision.js',
     'src/domain/house/floorplan-catalog.js',
     'src/domain/house/house-layout-generator.js',
@@ -56,4 +58,47 @@ test('SOLID & DDD Architecture: folder segregation, ubiquitous language, specs/A
     0,
     `Expected 0 architectural violations from dependency-cruiser, found: ${JSON.stringify(violations)}`
   );
+});
+
+test('IoC Container & Centralized Configuration: resolves contexts, handles overrides, and isolates magic numbers', async () => {
+  const { GAME_CONFIG } = await import('../src/config/game-config.js');
+  const { IoCContainer, createGameContainer } = await import(
+    '../src/container/ioc-container.js'
+  );
+
+  assert.ok(Object.isFrozen(GAME_CONFIG), 'GAME_CONFIG must be frozen');
+  assert.ok(
+    Object.isFrozen(GAME_CONFIG.environment),
+    'GAME_CONFIG.environment must be frozen'
+  );
+  assert.ok(
+    Object.isFrozen(GAME_CONFIG.movement),
+    'GAME_CONFIG.movement must be frozen'
+  );
+  assert.ok(
+    Object.isFrozen(GAME_CONFIG.vision),
+    'GAME_CONFIG.vision must be frozen'
+  );
+  assert.ok(
+    Object.isFrozen(GAME_CONFIG.gameplay),
+    'GAME_CONFIG.gameplay must be frozen'
+  );
+
+  assert.equal(GAME_CONFIG.vision.humanVisionRangePx, 190);
+  assert.equal(GAME_CONFIG.vision.meggieVisionRangePx, 95);
+  assert.equal(GAME_CONFIG.vision.spikeDomainRadiusPx, 95);
+
+  const container = createGameContainer();
+  assert.ok(container instanceof IoCContainer);
+  assert.equal(container.resolve('config'), GAME_CONFIG);
+  assert.ok(container.resolve('recordRepository'));
+  assert.ok(container.resolve('simulationUseCase'));
+
+  const customStorage = {
+    getItem: () => '[]',
+    setItem: () => {},
+    removeItem: () => {},
+  };
+  const customContainer = createGameContainer({ storage: customStorage });
+  assert.equal(customContainer.resolve('storage'), customStorage);
 });

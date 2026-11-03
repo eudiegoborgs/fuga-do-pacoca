@@ -1,9 +1,9 @@
 /**
- * Ponto de Entrada da Aplicação Web (Composition Root).
- * Inicializa o controlador de apresentação (`bootstrapGamePresentation`) para os elementos da página:
- * `#game-canvas`, `#hud-hearts`, `#hud-pee`, `#hud-pee-bar`, `#hud-timer`, `#hud-alert`,
- * `#humans-list`, `#records-list`, `#intro-modal`, `#end-modal`, `#fullscreen-btn`.
+ * Ponto de Entrada da Aplicação Web (Composition Root com Inversão de Controle - IoC).
+ * Monta o container de dependências (`createGameContainer`) e inicializa o controlador de apresentação.
  */
+import { createGameContainer } from './container/ioc-container.js';
 import { bootstrapGamePresentation } from './presentation/ui/game-controller.js';
 
-bootstrapGamePresentation();
+const container = createGameContainer();
+bootstrapGamePresentation(container);

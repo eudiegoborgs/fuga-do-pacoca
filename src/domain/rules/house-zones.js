@@ -2,7 +2,7 @@
  * Regras Espaciais de Zonas da Casa e Navegação de Entidades.
  * Garante a invariante de domínio: sempre deve permanecer ao menos 1 humano ativo dentro da casa.
  */
-import { BASE_SPEED } from '../ubiquitous-language.js';
+import { BASE_SPEED } from '../../config/game-config.js';
 import { resolveWallCollisions } from '../geometry/spatial-vision.js';
 import { MAP_CONFIG } from '../house/house-layout-generator.js';
 

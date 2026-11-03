@@ -32,12 +32,14 @@ Jogo 2D top-down de furtividade e ação em HTML5 Canvas e JavaScript puro (ES M
 
 ## 🎮 Controles
 
-| Tecla / Botão | Ação |
+| Controle / Tecla | Ação |
 | :--- | :--- |
-| `W A S D` ou `Setas` | Movimenta o Paçoca (velocidade diagonal normalizada) |
+| `W A S D` ou `Setas` | Movimenta o Paçoca no teclado (velocidade diagonal normalizada) |
+| **Gamepad Virtual (D-pad)** | Direcionais dedicados na tela logo abaixo do jogo para smartphones e tablets |
+| **Toque & Arraste no Canvas** | Virtual thumbstick: arraste o dedo diretamente na tela para guiar o Paçoca |
 | `E` ou botão **💦 Fazer Xixi** | Faz xixi se estiver fora do campo de visão dos humanos (recarga de `5s`) |
-| `F` ou botão **⛶ Tela Cheia** | Alterna o modo Tela Cheia |
-| `Espaço` | Reinicia a partida na tela de fim de jogo |
+| `F` ou botão **⛶ Tela Cheia** | Alterna o modo Tela Cheia com layout adaptado para celular |
+| `Espaço` ou botão **🔄 Reiniciar** | Reinicia a partida na tela de fim de jogo |
 
 ---
 
@@ -46,7 +48,7 @@ Jogo 2D top-down de furtividade e ação em HTML5 Canvas e JavaScript puro (ES M
 Pré-requisito: **Node.js 20+**.
 
 ```bash
-# Validar fronteiras arquiteturais (dependency-cruiser) + suíte de 24 testes
+# Validar fronteiras arquiteturais (dependency-cruiser) + suíte de 25 testes
 npm test
 
 # Executar apenas a validação de regras de arquitetura SOLID/DDD
@@ -60,14 +62,16 @@ Depois, acesse `http://localhost:8080` no navegador.
 
 ---
 
-## 🏛️ Arquitetura (DDD + SOLID) e Documentação Técnica
+## 🏛️ Arquitetura (DDD + SOLID), IoC e Configuração Centralizada
 
-O código está segregado em 4 camadas coesas com **Linguagem Ubíqua** e baixo acoplamento, validadas automaticamente pelo [`dependency-cruiser`](.dependency-cruiser.cjs):
+O código está segregado em camadas coesas com **Inversão de Controle**, **Configuração Contextualizada sem números mágicos** e baixo acoplamento, validadas automaticamente pelo [`dependency-cruiser`](.dependency-cruiser.cjs):
 
-- **`src/domain/`** — Camada pura de Domínio: Linguagem Ubíqua (`ubiquitous-language.js`), Geometria e Visão (`geometry/`), Catálogo e Gerador das 30 Plantas (`house/`), Fábrica da Família (`family/`) e Regras de Negócio (`rules/`).
+- **`src/config/`** — Configuração centralizada (`game-config.js`) agrupada por contexto (`environment`, `movement`, `vision`, `gameplay`), permitindo sobrescrita limpa por variáveis de ambiente sem números mágicos espalhados.
+- **`src/container/`** — Container de Inversão de Controle (`ioc-container.js`) para registro e resolução desacoplada de casos de uso, repositórios, áudio e renderizador.
+- **`src/domain/`** — Camada pura de Domínio: Estados e Modos da Partida (`partida-states.js`), Geometria e Visão (`geometry/`), Catálogo e Gerador das 30 Plantas (`house/`), Fábrica da Família (`family/`) e Regras de Negócio (`rules/`). A Linguagem Ubíqua vive organicamente nos nomes de classes, funções e tipos do negócio.
 - **`src/application/`** — Casos de Uso e Portas (`ports/` e `use-cases/`).
 - **`src/infrastructure/`** — Adaptadores externos de Áudio (`web-audio-sound-engine.js`) e Persistência em Localhost (`localhost-record-repository.js`).
-- **`src/presentation/`** — Renderizador Canvas 2D (`canvas/game-renderer.js`) e Controlador DOM (`ui/game-controller.js`).
+- **`src/presentation/`** — Renderizador Canvas 2D (`canvas/game-renderer.js`), Gamepad Virtual Mobile e Controlador DOM (`ui/game-controller.js`).
 
 ### Especificações (Specs) e ADRs
 - [Especificação do Domínio e Linguagem Ubíqua](docs/specs/domain-ubiquitous-language-spec.md) *(Público-alvo: Desenvolvedores de domínio, Game Designers e QA)*

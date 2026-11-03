@@ -4,7 +4,9 @@
 
 ---
 
-## 1. Dicionário da Linguagem Ubíqua (`src/domain/ubiquitous-language.js`)
+## 1. Dicionário da Linguagem Ubíqua (`src/domain/partida-states.js` e `src/config/game-config.js`)
+
+A linguagem ubíqua permeia os identificadores do código e as configurações do jogo, sem a necessidade de um arquivo artificialmente chamado "ubiquitous-language". A tabela abaixo documenta o mapeamento direto entre os conceitos de negócio e suas representações tipadas:
 
 | Termo no Domínio | Identificador no Código | Significado na Regra de Negócio |
 | :--- | :--- | :--- |

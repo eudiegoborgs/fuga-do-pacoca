@@ -6,9 +6,11 @@
 import {
   BASE_SPEED,
   SPIKE_DOMAIN_RADIUS,
+} from '../../config/game-config.js';
+import {
   ModoDoCao,
   EventoSonoro,
-} from '../ubiquitous-language.js';
+} from '../partida-states.js';
 import { hasLineOfSight, isPointInCone } from '../geometry/spatial-vision.js';
 import { MAP_CONFIG } from '../house/house-layout-generator.js';
 import { moveEntityToward } from './house-zones.js';

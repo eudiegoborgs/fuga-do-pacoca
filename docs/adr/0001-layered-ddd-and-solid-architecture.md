@@ -16,8 +16,12 @@ Adotamos uma arquitetura inspirada em **Domain-Driven Design (DDD)** e **Clean/L
 
 ```text
 src/
-├── domain/                  # Camada Pura de Domínio (Linguagem Ubíqua, Geometria, Casa, Família, Regras)
-│   ├── ubiquitous-language.js
+├── config/                  # Configuração Centralizada com Contexto e Variáveis de Ambiente
+│   └── game-config.js
+├── container/               # Inversão de Controle (IoC Container & Injeção de Dependência)
+│   └── ioc-container.js
+├── domain/                  # Camada Pura de Domínio (Estados da Partida, Geometria, Casa, Família, Regras)
+│   ├── partida-states.js
 │   ├── geometry/
 │   │   └── spatial-vision.js
 │   ├── house/
@@ -41,7 +45,7 @@ src/
 │   │   └── web-audio-sound-engine.js
 │   └── storage/
 │       └── localhost-record-repository.js
-└── presentation/            # Interface Gráfica (Canvas 2D e Controlador DOM/Tela Cheia)
+└── presentation/            # Interface Gráfica (Canvas 2D, Gamepad de Toque e Controlador DOM/Tela Cheia)
     ├── canvas/
     │   └── game-renderer.js
     └── ui/

@@ -2,11 +2,11 @@
  * Caso de Uso Principal: Orquestração da Partida "A Fuga do Paçoca" (`createInitialState` e `stepGame`).
  * Compõe as fábricas e regras de domínio mantendo coesão alta e baixo acoplamento.
  */
+import { BASE_SPEED } from '../../config/game-config.js';
 import {
-  BASE_SPEED,
   EstadoDaPartida,
   EventoSonoro,
-} from '../../domain/ubiquitous-language.js';
+} from '../../domain/partida-states.js';
 import {
   circleIntersectsRect,
   resolveWallCollisions,

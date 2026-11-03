@@ -1,12 +1,12 @@
 /**
  * Regras de Furtividade, Alertas da Casa, Jatos de Água e Habilidade de Xixi do Paçoca.
  */
+import { BASE_SPEED } from '../../config/game-config.js';
 import {
-  BASE_SPEED,
   EstadoDaPartida,
   ModoDoHumano,
   EventoSonoro,
-} from '../ubiquitous-language.js';
+} from '../partida-states.js';
 import { isPointInCone } from '../geometry/spatial-vision.js';
 import { MAP_CONFIG } from '../house/house-layout-generator.js';
 import {
