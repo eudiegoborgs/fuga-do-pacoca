@@ -1,7 +1,7 @@
 /**
  * Controlador de Apresentação (DOM, HUD, Modais, Tela Cheia e Loop de Entrada).
  * Público-alvo: Desenvolvedores de UI/Frontend que alteram elementos HTML/CSS,
- * controles de smartphone / gamepad virtual ou atalhos de teclado.
+ * controles de smartphone / joystick virtual ou atalhos de teclado.
  */
 import { createGameContainer } from '../../container/ioc-container.js';
 import { EstadoDaPartida } from '../../domain/partida-states.js';
@@ -18,9 +18,9 @@ export function bootstrapGamePresentation(container = createGameContainer()) {
   let state = simulation.createInitialState();
   let isPaused = true;
   let isPeeRequested = false;
+  let isPseudoFullscreen = false;
   const pressedKeys = new Set();
   const touchInputVector = { dx: 0, dy: 0 };
-  const activeTouchDirections = new Set();
 
   const heartsElement = document.getElementById('hud-hearts');
   const peeLabelElement = document.getElementById('hud-pee');
@@ -29,6 +29,8 @@ export function bootstrapGamePresentation(container = createGameContainer()) {
   const alertElement = document.getElementById('hud-alert');
   const gameScreenBox = document.getElementById('game-screen-box');
   const fullscreenButton = document.getElementById('fullscreen-btn');
+  const mobileFullscreenButton = document.getElementById('mobile-fullscreen-btn');
+  const fullscreenExitFloatButton = document.getElementById('fullscreen-exit-float-btn');
   const humansListElement = document.getElementById('humans-list');
   const recordsListElement = document.getElementById('records-list');
   const introModalElement = document.getElementById('intro-modal');
@@ -185,27 +187,128 @@ export function bootstrapGamePresentation(container = createGameContainer()) {
     updateHeadsUpDisplay();
   }
 
-  function toggleFullscreenMode() {
-    const fullscreenTarget = gameScreenBox || canvas;
-    if (!document.fullscreenElement) {
-      if (fullscreenTarget.requestFullscreen) {
-        fullscreenTarget.requestFullscreen().catch(() => {});
+  // --- Gerenciamento Robusto de Tela Cheia (Nativo + Fallback Mobile iOS/Android) ---
+  function isNativeFullscreenActive() {
+    return Boolean(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement
+    );
+  }
+
+  function updateFullscreenUI(active) {
+    const labelTop = active ? '🗗 Sair da Tela Cheia' : '⛶ Tela Cheia (F)';
+    const labelMobile = active ? '🗗 Sair Tela Cheia' : '⛶ Tela Cheia';
+
+    if (fullscreenButton) fullscreenButton.textContent = labelTop;
+    if (mobileFullscreenButton) mobileFullscreenButton.textContent = labelMobile;
+
+    if (fullscreenExitFloatButton) {
+      if (active) {
+        fullscreenExitFloatButton.classList.remove('hidden');
+      } else {
+        fullscreenExitFloatButton.classList.add('hidden');
       }
-    } else if (document.exitFullscreen) {
-      document.exitFullscreen().catch(() => {});
+    }
+
+    if (active) {
+      document.body.classList.add('in-fullscreen');
+    } else {
+      document.body.classList.remove('in-fullscreen');
     }
   }
 
-  document.addEventListener('fullscreenchange', () => {
-    if (fullscreenButton) {
-      fullscreenButton.textContent = document.fullscreenElement
-        ? '🗗 Sair da Tela Cheia'
-        : '⛶ Tela Cheia (F)';
+  function enablePseudoFullscreen() {
+    isPseudoFullscreen = true;
+    const fullscreenTarget = gameScreenBox || canvas;
+    if (fullscreenTarget) {
+      fullscreenTarget.classList.add('is-pseudo-fullscreen');
     }
-  });
+    updateFullscreenUI(true);
+  }
+
+  function disablePseudoFullscreen() {
+    isPseudoFullscreen = false;
+    const fullscreenTarget = gameScreenBox || canvas;
+    if (fullscreenTarget) {
+      fullscreenTarget.classList.remove('is-pseudo-fullscreen');
+    }
+    updateFullscreenUI(false);
+  }
+
+  function enterFullscreen() {
+    const fullscreenTarget = gameScreenBox || canvas;
+    if (!fullscreenTarget) return;
+
+    const requestFs =
+      fullscreenTarget.requestFullscreen ||
+      fullscreenTarget.webkitRequestFullscreen ||
+      fullscreenTarget.webkitRequestFullScreen ||
+      fullscreenTarget.mozRequestFullScreen ||
+      fullscreenTarget.msRequestFullscreen;
+
+    if (requestFs) {
+      try {
+        const promise = requestFs.call(fullscreenTarget);
+        if (promise && typeof promise.then === 'function') {
+          promise.catch(() => {
+            // Em caso de rejeição no browser mobile, ativa pseudo-fullscreen imediatamente
+            enablePseudoFullscreen();
+          });
+        }
+      } catch {
+        enablePseudoFullscreen();
+      }
+    } else {
+      // iOS Safari (iPhone) não expõe requestFullscreen para elementos DOM comuns
+      enablePseudoFullscreen();
+    }
+  }
+
+  function exitFullscreen() {
+    if (isPseudoFullscreen) {
+      disablePseudoFullscreen();
+    }
+
+    const exitFs =
+      document.exitFullscreen ||
+      document.webkitExitFullscreen ||
+      document.webkitCancelFullScreen ||
+      document.mozCancelFullScreen ||
+      document.msExitFullscreen;
+
+    if (exitFs && isNativeFullscreenActive()) {
+      try {
+        exitFs.call(document);
+      } catch {}
+    }
+  }
+
+  function toggleFullscreenMode() {
+    if (isNativeFullscreenActive() || isPseudoFullscreen) {
+      exitFullscreen();
+    } else {
+      enterFullscreen();
+    }
+  }
+
+  const handleNativeFullscreenChange = () => {
+    const active = isNativeFullscreenActive() || isPseudoFullscreen;
+    updateFullscreenUI(active);
+  };
+
+  document.addEventListener('fullscreenchange', handleNativeFullscreenChange);
+  document.addEventListener('webkitfullscreenchange', handleNativeFullscreenChange);
 
   if (fullscreenButton) {
     fullscreenButton.addEventListener('click', toggleFullscreenMode);
+  }
+  if (mobileFullscreenButton) {
+    mobileFullscreenButton.addEventListener('click', toggleFullscreenMode);
+  }
+  if (fullscreenExitFloatButton) {
+    fullscreenExitFloatButton.addEventListener('click', exitFullscreen);
   }
 
   window.addEventListener('keydown', (event) => {
@@ -221,6 +324,10 @@ export function bootstrapGamePresentation(container = createGameContainer()) {
       toggleFullscreenMode();
       return;
     }
+    if (event.key === 'Escape' && isPseudoFullscreen) {
+      exitFullscreen();
+      return;
+    }
     if (keyLower === 'e' || event.key === ' ') {
       isPeeRequested = true;
     }
@@ -231,54 +338,105 @@ export function bootstrapGamePresentation(container = createGameContainer()) {
     pressedKeys.delete(event.key.toLowerCase());
   });
 
-  function recalculateTouchDirectionVector() {
-    let dx = 0;
-    let dy = 0;
-    if (activeTouchDirections.has('left')) dx -= 1;
-    if (activeTouchDirections.has('right')) dx += 1;
-    if (activeTouchDirections.has('up')) dy -= 1;
-    if (activeTouchDirections.has('down')) dy += 1;
-    touchInputVector.dx = dx;
-    touchInputVector.dy = dy;
-  }
-
   function readPlayerInputCommand() {
     let dx = touchInputVector.dx;
     let dy = touchInputVector.dy;
     if (pressedKeys.has('arrowleft') || pressedKeys.has('a')) dx -= 1;
     if (pressedKeys.has('arrowright') || pressedKeys.has('d')) dx += 1;
     if (pressedKeys.has('arrowup') || pressedKeys.has('w')) dy -= 1;
-    if (pressedKeys.has('arrowdown') || pressedKeys.has('s')) dy -= 1;
+    if (pressedKeys.has('arrowdown') || pressedKeys.has('s')) dy += 1;
     const pee = isPeeRequested;
     isPeeRequested = false;
     return { dx, dy, pee };
   }
 
-  // Controles virtuais na tela (Gamepad D-pad)
-  for (const dirButton of document.querySelectorAll('[data-dir]')) {
-    const direction = dirButton.getAttribute('data-dir');
-    const startDirection = (e) => {
-      e.preventDefault();
-      sound.init();
-      activeTouchDirections.add(direction);
-      dirButton.classList.add('active');
-      recalculateTouchDirectionVector();
-    };
-    const endDirection = (e) => {
-      e.preventDefault();
-      activeTouchDirections.delete(direction);
-      dirButton.classList.remove('active');
-      recalculateTouchDirectionVector();
-    };
+  // --- Joystick Virtual Tátil e Analógico para Smartphones e Tablets ---
+  const joystickBase = document.getElementById('joystick-base');
+  const joystickStick = document.getElementById('joystick-stick');
+  let activeJoystickPointerId = null;
+  const maxJoystickRadius = 38;
 
-    dirButton.addEventListener('pointerdown', startDirection);
-    dirButton.addEventListener('pointerup', endDirection);
-    dirButton.addEventListener('pointercancel', endDirection);
-    dirButton.addEventListener('pointerleave', endDirection);
+  function updateJoystickPosition(clientX, clientY) {
+    if (!joystickBase || !joystickStick) return;
+    const rect = joystickBase.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    const deltaX = clientX - centerX;
+    const deltaY = clientY - centerY;
+    const distance = Math.hypot(deltaX, deltaY);
+
+    const clampedDist = Math.min(distance, maxJoystickRadius);
+    const angle = Math.atan2(deltaY, deltaX);
+
+    const stickX = Math.cos(angle) * clampedDist;
+    const stickY = Math.sin(angle) * clampedDist;
+
+    joystickStick.style.transition = 'none';
+    joystickStick.style.transform = `translate(${stickX.toFixed(1)}px, ${stickY.toFixed(1)}px)`;
+
+    const deadzone = 6;
+    if (distance > deadzone) {
+      const normalizedRatio = (clampedDist - deadzone) / (maxJoystickRadius - deadzone);
+      touchInputVector.dx = Math.cos(angle) * normalizedRatio;
+      touchInputVector.dy = Math.sin(angle) * normalizedRatio;
+    } else {
+      touchInputVector.dx = 0;
+      touchInputVector.dy = 0;
+    }
   }
 
-  // Toque / Arrastar diretamente no Canvas (Virtual Thumbstick para Smartphones)
-  let touchOrigin = null;
+  function resetJoystick() {
+    activeJoystickPointerId = null;
+    if (joystickStick) {
+      joystickStick.style.transition =
+        'transform 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      joystickStick.style.transform = 'translate(0px, 0px)';
+    }
+    touchInputVector.dx = 0;
+    touchInputVector.dy = 0;
+  }
+
+  if (joystickBase) {
+    joystickBase.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      sound.init();
+      activeJoystickPointerId = e.pointerId;
+      try {
+        joystickBase.setPointerCapture(e.pointerId);
+      } catch {}
+      updateJoystickPosition(e.clientX, e.clientY);
+    });
+
+    joystickBase.addEventListener('pointermove', (e) => {
+      if (activeJoystickPointerId !== null && e.pointerId === activeJoystickPointerId) {
+        e.preventDefault();
+        updateJoystickPosition(e.clientX, e.clientY);
+      }
+    });
+
+    const onJoystickRelease = (e) => {
+      if (activeJoystickPointerId !== null && e.pointerId === activeJoystickPointerId) {
+        e.preventDefault();
+        try {
+          joystickBase.releasePointerCapture(e.pointerId);
+        } catch {}
+        resetJoystick();
+      }
+    };
+
+    joystickBase.addEventListener('pointerup', onJoystickRelease);
+    joystickBase.addEventListener('pointercancel', onJoystickRelease);
+    joystickBase.addEventListener('pointerleave', (e) => {
+      // Se não houver captura de ponteiro nativa ativa, reseta
+      if (activeJoystickPointerId !== null && !joystickBase.hasPointerCapture?.(e.pointerId)) {
+        resetJoystick();
+      }
+    });
+  }
+
+  // --- Suporte a Toque / Arrastar diretamente no Canvas (Thumbstick livre) ---
+  let canvasTouchOrigin = null;
   canvas.addEventListener(
     'touchstart',
     (e) => {
@@ -286,7 +444,7 @@ export function bootstrapGamePresentation(container = createGameContainer()) {
       if (e.touches && e.touches.length > 0) {
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
-        touchOrigin = {
+        canvasTouchOrigin = {
           x: touch.clientX - rect.left,
           y: touch.clientY - rect.top,
         };
@@ -298,14 +456,14 @@ export function bootstrapGamePresentation(container = createGameContainer()) {
   canvas.addEventListener(
     'touchmove',
     (e) => {
-      if (!touchOrigin || !e.touches || e.touches.length === 0) return;
-      e.preventDefault(); // Impede scroll indesejado enquanto joga no celular
+      if (!canvasTouchOrigin || !e.touches || e.touches.length === 0) return;
+      e.preventDefault(); // Impede rolagem da página ao interagir com o jogo
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
       const currentX = touch.clientX - rect.left;
       const currentY = touch.clientY - rect.top;
-      const deltaX = currentX - touchOrigin.x;
-      const deltaY = currentY - touchOrigin.y;
+      const deltaX = currentX - canvasTouchOrigin.x;
+      const deltaY = currentY - canvasTouchOrigin.y;
       const distance = Math.hypot(deltaX, deltaY);
       const deadzone = 12;
 
@@ -313,20 +471,22 @@ export function bootstrapGamePresentation(container = createGameContainer()) {
         touchInputVector.dx = Math.max(-1, Math.min(1, deltaX / Math.max(distance, 35)));
         touchInputVector.dy = Math.max(-1, Math.min(1, deltaY / Math.max(distance, 35)));
       } else {
-        recalculateTouchDirectionVector();
+        touchInputVector.dx = 0;
+        touchInputVector.dy = 0;
       }
     },
     { passive: false }
   );
 
   const resetCanvasTouch = () => {
-    touchOrigin = null;
-    recalculateTouchDirectionVector();
+    canvasTouchOrigin = null;
+    touchInputVector.dx = 0;
+    touchInputVector.dy = 0;
   };
   canvas.addEventListener('touchend', resetCanvasTouch);
   canvas.addEventListener('touchcancel', resetCanvasTouch);
 
-  // Ações de Xixi (Botão superior e Botão do Gamepad Virtual)
+  // Ações de Xixi
   const triggerPeeAction = (e) => {
     if (e && typeof e.preventDefault === 'function') e.preventDefault();
     sound.init();
@@ -339,11 +499,6 @@ export function bootstrapGamePresentation(container = createGameContainer()) {
   const screenPeeButton = document.getElementById('touch-screen-pee-btn');
   if (screenPeeButton) {
     screenPeeButton.addEventListener('pointerdown', triggerPeeAction);
-  }
-
-  const legacyTouchPee = document.getElementById('touch-pee-btn');
-  if (legacyTouchPee) {
-    legacyTouchPee.addEventListener('pointerdown', triggerPeeAction);
   }
 
   // Inicialização e Reinício

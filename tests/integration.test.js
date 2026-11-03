@@ -80,8 +80,19 @@ test('Web entry files (index.html, src/style.css, src/audio.js, src/renderer.js,
       canvasWrapMatch[0].includes('id="hud-hearts"') &&
       canvasWrapMatch[0].includes('id="hud-pee-bar"') &&
       canvasWrapMatch[0].includes('id="hud-alert"') &&
-      canvasWrapMatch[0].includes('id="end-modal"'),
-    'Hearts, pee bar, house status, and end-game alert modal (#end-modal) must be inside .canvas-wrap so they appear in fullscreen'
+      canvasWrapMatch[0].includes('id="end-modal"') &&
+      canvasWrapMatch[0].includes('id="joystick-base"') &&
+      canvasWrapMatch[0].includes('id="joystick-stick"') &&
+      canvasWrapMatch[0].includes('id="fullscreen-exit-float-btn"'),
+    'Hearts, pee bar, house status, end modal, virtual joystick and float exit button must be inside .canvas-wrap'
+  );
+
+  const css = fs.readFileSync(path.join(ROOT, 'src/style.css'), 'utf8');
+  assert.ok(
+    css.includes('.is-pseudo-fullscreen') &&
+      css.includes('.joystick-base') &&
+      css.includes('.joystick-stick'),
+    'src/style.css must define .is-pseudo-fullscreen and virtual joystick styles'
   );
 });
 

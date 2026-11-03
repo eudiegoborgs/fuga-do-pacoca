@@ -25,6 +25,11 @@
 
   <main class="layout">
     <section class="canvas-wrap" id="game-screen-box">
+      <!-- Botão Flutuante para Sair da Tela Cheia (aparece apenas em tela cheia / pseudo-fullscreen) -->
+      <button class="fullscreen-exit-float-btn hidden" id="fullscreen-exit-float-btn" type="button" aria-label="Sair da tela cheia">
+        ✕ Sair da Tela Cheia
+      </button>
+
       <canvas id="game-canvas" width="640" height="640"></canvas>
       <div class="under-screen-hud">
         <div class="stat-pill" id="hud-hearts">Pelo Seco: ❤️❤️❤️</div>
@@ -39,19 +44,25 @@
       </div>
 
       <!-- Controles Virtuais de Toque (Smartphone / Tablet / Tela Cheia) -->
-      <div class="touch-gamepad" id="touch-gamepad" aria-label="Controles Virtuais de Toque para Smartphone">
-        <div class="dpad-box" aria-label="Direcionais do Paçoca">
-          <button class="dpad-btn dpad-up" data-dir="up" type="button" aria-label="Cima">▲</button>
-          <button class="dpad-btn dpad-left" data-dir="left" type="button" aria-label="Esquerda">◀</button>
-          <div class="dpad-center" aria-hidden="true">🐾</div>
-          <button class="dpad-btn dpad-right" data-dir="right" type="button" aria-label="Direita">▶</button>
-          <button class="dpad-btn dpad-down" data-dir="down" type="button" aria-label="Baixo">▼</button>
+      <div class="touch-gamepad" id="touch-gamepad" aria-label="Controles Virtuais com Joystick para Smartphone">
+        <div class="joystick-wrapper" aria-label="Área do Joystick Virtual">
+          <div class="joystick-base" id="joystick-base" aria-label="Joystick de Movimentação do Paçoca">
+            <div class="joystick-crosshair" aria-hidden="true"></div>
+            <div class="joystick-stick" id="joystick-stick" aria-hidden="true">
+              <span class="stick-icon">🐾</span>
+            </div>
+          </div>
+          <span class="joystick-label">🕹️ Arraste o Joystick</span>
         </div>
+
         <div class="touch-actions-group">
           <button class="touch-action-btn action-pee" id="touch-screen-pee-btn" type="button">
             💦 Fazer Xixi
           </button>
-          <div class="touch-hint">📱 Dica: você também pode <strong>tocar e arrastar o dedo diretamente na tela</strong> para guiar o Paçoca!</div>
+          <button class="touch-action-btn action-fs" id="mobile-fullscreen-btn" type="button">
+            ⛶ Tela Cheia
+          </button>
+          <div class="touch-hint">📱 Dica: você também pode guiar o Paçoca <strong>arrastando o dedo na tela</strong>!</div>
         </div>
       </div>
 
@@ -145,7 +156,7 @@
 
       <h2>🎮 Como Jogar</h2>
       <div class="controls-box">
-        <p><strong>Mover Paçoca:</strong> No PC: Setas ou <code>W A S D</code>. No celular: toque no <strong>Gamepad virtual</strong> ou <strong>arraste o dedo na tela</strong>.</p>
+        <p><strong>Mover Paçoca:</strong> No PC: Setas ou <code>W A S D</code>. No celular: use o <strong>Joystick virtual 🕹️</strong> ou <strong>arraste o dedo diretamente no jogo</strong>.</p>
         <p><strong>Fazer Xixi (Recarga 5s):</strong> Tecla <code>E</code> ou botão <strong>💦 Fazer Xixi</strong>. Só funciona <strong>fora do campo de visão</strong> dos humanos — quem vê a poça para tudo para limpar!</p>
         <p><strong>Minimapa & Tela Cheia:</strong> Veja a planta baixa no canto inferior direito e use <code>F</code> para Tela Cheia.</p>
       </div>

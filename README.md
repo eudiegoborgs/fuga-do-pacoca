@@ -11,7 +11,7 @@ Jogo 2D top-down de furtividade e ação em HTML5 Canvas e JavaScript puro (ES M
 - **Habilidade de Xixi (`E` — Recarga de 5s):** O Paçoca pode fazer xixi **fora do campo de visão dos humanos**. Quando um humano avista a poça de xixi, fica distraído limpando o chão.
 - **Câmeras de Segurança:** 4 câmeras monitoram os cantos da propriedade. Se o Paçoca permanecer no cone de visão da câmera, o alarme dispara e **todos os humanos distraídos retomam a atenção imediatamente**.
 - **Cronômetro e Recordes no Localhost:** O jogo mede o tempo exato até a fuga e salva os 10 melhores tempos (apenas quando o Paçoca realmente foge pelo portão) em `localStorage` e no servidor local.
-- **Modo Tela Cheia (`F`):** HUD integrado sob/sobre a tela quadrada do jogo e modais de início/fim exibidos dentro do contêiner em tela cheia.
+- **Modo Tela Cheia (`F` / Botão):** Suporte nativo à Fullscreen API com fallback de pseudo-fullscreen para mobile (iOS Safari / WebKit e Android), mantendo o HUD, modais e joystick sempre visíveis e dimensionados.
 
 ---
 
@@ -35,8 +35,8 @@ Jogo 2D top-down de furtividade e ação em HTML5 Canvas e JavaScript puro (ES M
 | Controle / Tecla | Ação |
 | :--- | :--- |
 | `W A S D` ou `Setas` | Movimenta o Paçoca no teclado (velocidade diagonal normalizada) |
-| **Gamepad Virtual (D-pad)** | Direcionais dedicados na tela logo abaixo do jogo para smartphones e tablets |
-| **Toque & Arraste no Canvas** | Virtual thumbstick: arraste o dedo diretamente na tela para guiar o Paçoca |
+| **Joystick Virtual 🕹️** | Joystick analógico na tela logo abaixo do jogo para guiar o Paçoca no smartphone ou tablet |
+| **Toque & Arraste no Canvas** | Virtual thumbstick livre: arraste o dedo diretamente sobre o jogo para guiar o Paçoca |
 | `E` ou botão **💦 Fazer Xixi** | Faz xixi se estiver fora do campo de visão dos humanos (recarga de `5s`) |
 | `F` ou botão **⛶ Tela Cheia** | Alterna o modo Tela Cheia com layout adaptado para celular |
 | `Espaço` ou botão **🔄 Reiniciar** | Reinicia a partida na tela de fim de jogo |
