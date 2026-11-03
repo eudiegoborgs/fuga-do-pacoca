@@ -38,6 +38,23 @@
         <div class="stat-pill" id="hud-alert">🏠 Casa Calma</div>
       </div>
 
+      <!-- Controles Virtuais de Toque (Smartphone / Tablet / Tela Cheia) -->
+      <div class="touch-gamepad" id="touch-gamepad" aria-label="Controles Virtuais de Toque para Smartphone">
+        <div class="dpad-box" aria-label="Direcionais do Paçoca">
+          <button class="dpad-btn dpad-up" data-dir="up" type="button" aria-label="Cima">▲</button>
+          <button class="dpad-btn dpad-left" data-dir="left" type="button" aria-label="Esquerda">◀</button>
+          <div class="dpad-center" aria-hidden="true">🐾</div>
+          <button class="dpad-btn dpad-right" data-dir="right" type="button" aria-label="Direita">▶</button>
+          <button class="dpad-btn dpad-down" data-dir="down" type="button" aria-label="Baixo">▼</button>
+        </div>
+        <div class="touch-actions-group">
+          <button class="touch-action-btn action-pee" id="touch-screen-pee-btn" type="button">
+            💦 Fazer Xixi
+          </button>
+          <div class="touch-hint">📱 Dica: você também pode <strong>tocar e arrastar o dedo diretamente na tela</strong> para guiar o Paçoca!</div>
+        </div>
+      </div>
+
       <!-- Modal Inicial (dentro do contêiner do jogo para aparecer também em Tela Cheia) -->
       <div class="overlay-modal" id="intro-modal">
         <div class="modal-card">
@@ -128,18 +145,9 @@
 
       <h2>🎮 Como Jogar</h2>
       <div class="controls-box">
-        <p><strong>Mover Paçoca:</strong> Setas ou <code>W A S D</code>.</p>
-        <p><strong>Fazer Xixi (Recarga 5s):</strong> Tecla <code>E</code> ou botão <strong>Fazer Xixi</strong>. Só funciona <strong>fora do campo de visão</strong> dos humanos — quando um humano vê o xixi, fica distraído limpando!</p>
-        <p><strong>Minimapa & Tela Cheia:</strong> Veja a planta baixa da casa no canto inferior direito e use <code>F</code> para Tela Cheia.</p>
-      </div>
-
-      <div class="touch-controls" aria-label="Controles de toque">
-        <div></div>
-        <button class="touch-btn" data-dir="up" type="button">▲</button>
-        <button class="touch-btn" id="touch-pee-btn" type="button">💦</button>
-        <button class="touch-btn" data-dir="left" type="button">◀</button>
-        <button class="touch-btn" data-dir="down" type="button">▼</button>
-        <button class="touch-btn" data-dir="right" type="button">▶</button>
+        <p><strong>Mover Paçoca:</strong> No PC: Setas ou <code>W A S D</code>. No celular: toque no <strong>Gamepad virtual</strong> ou <strong>arraste o dedo na tela</strong>.</p>
+        <p><strong>Fazer Xixi (Recarga 5s):</strong> Tecla <code>E</code> ou botão <strong>💦 Fazer Xixi</strong>. Só funciona <strong>fora do campo de visão</strong> dos humanos — quem vê a poça para tudo para limpar!</p>
+        <p><strong>Minimapa & Tela Cheia:</strong> Veja a planta baixa no canto inferior direito e use <code>F</code> para Tela Cheia.</p>
       </div>
     </aside>
   </main>

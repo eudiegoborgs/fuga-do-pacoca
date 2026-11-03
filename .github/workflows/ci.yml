@@ -2,14 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'feat/**']
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 jobs:
   test:
-    name: Testes Automatizados
+    name: Testes e Arquitetura (SOLID / DDD)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do código
@@ -19,6 +19,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
 
-      - name: Executar testes unitários e de integração
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Validar regras de arquitetura (dependency-cruiser) e testes
         run: npm test
